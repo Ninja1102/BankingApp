@@ -1,5 +1,5 @@
 export class ApproveAccountDto {
-    requestId: number;
+    userId: number;
     action: 'APPROVE' | 'REJECT';
   }
   

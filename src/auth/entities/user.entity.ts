@@ -29,6 +29,12 @@ export class User {
   @Column()
   mobile: string;
 
+  @Column({ default: 0 })
+  balance: number;
+
+  @Column({ default: 'APPROVED' }) // or 'PENDING' if you prefer stricter flow
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';  
+
   @Column({ default: 'USER' })
   role: 'USER' | 'ADMIN';
 }

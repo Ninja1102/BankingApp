@@ -2,6 +2,7 @@ import { Controller, Get, Put, Body, Req, UseGuards, Query } from '@nestjs/commo
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard)
@@ -28,6 +29,11 @@ export class DashboardController {
   @Get('statement')
   getStatement(@Req() req, @Query('from') from: string, @Query('to') to: string) {
     return this.dashboardService.getAccountStatement(req.user.userId, from, to);
+  }
+
+  @Put('change-password')
+  changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
+    return this.dashboardService.changePassword(req.user.userId, dto);
   }
   
 }

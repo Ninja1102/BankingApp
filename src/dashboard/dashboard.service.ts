@@ -1,9 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Transaction } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Profile } from './entities/profile.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from 'src/auth/entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { Transaction } from 'src/fund/entities/transaction.entity'; // your actual entity
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class DashboardService {
@@ -35,9 +38,10 @@ export class DashboardService {
 
   async getAccountSummary(userId: number) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
     const transactions = await this.transactionRepo.find({
       where: [{ fromAccount: user.accountNumber }, { toAccount: user.accountNumber }],
-      order: { date: 'DESC' },
+      order: { createdAt: 'DESC' },
       take: 5,
     });
   
@@ -47,5 +51,40 @@ export class DashboardService {
       recentTransactions: transactions,
     };
   }
+
+  async getAccountStatement(userId: number, from: string, to: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('User not found');
+
+  
+    return await this.transactionRepo.find({
+      where: {
+        fromAccount: user.accountNumber,
+        createdAt: Between(new Date(from), new Date(to)),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+      
+    const isLoginMatch = await bcrypt.compare(dto.oldPassword, user.password);
+    const isTxnMatch = await bcrypt.compare(dto.oldTransactionPassword, user.transactionPassword);
+  
+    if (!isLoginMatch || !isTxnMatch) {
+      throw new UnauthorizedException('Old credentials incorrect');
+    }
+  
+    if (dto.newPassword !== dto.confirmPassword || dto.newTransactionPassword !== dto.confirmTransactionPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+  
+    user.password = await bcrypt.hash(dto.newPassword, 10);
+    user.transactionPassword = await bcrypt.hash(dto.newTransactionPassword, 10);
+  
+    return await this.userRepo.save(user);
+  }  
   
 }

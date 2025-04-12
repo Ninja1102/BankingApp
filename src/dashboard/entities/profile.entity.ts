@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { User } from 'src/auth/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from 'typeorm';
 
 @Entity()
 export class Profile {
@@ -7,7 +8,6 @@ export class Profile {
 
   @Column()
   userId: number;
-
 
   @Column()
   name: string;
@@ -29,4 +29,8 @@ export class Profile {
 
   @Column()
   occupation: string;
+
+  @OneToOne(() => User, user => user.profile)
+  user: User;
+  
 }

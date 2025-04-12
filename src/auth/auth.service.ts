@@ -15,13 +15,14 @@ import {
   import { RegisterDto } from './dto/register.dto';
   import { LoginDto } from './dto/login.dto';
 import { CreateAccountRequestDto } from './dto/create-account-request.dto';
+import { AccountRequest } from './entities/account-request.entity';
   
   @Injectable()
   export class AuthService {
     constructor(
       @InjectRepository(User) private userRepo: Repository<User>,
       @InjectRepository(Profile) private profileRepo: Repository<Profile>,
-      @InjectRepository(CreateAccountRequestDto) private accountRequestRepo: Repository<CreateAccountRequestDto>,
+      @InjectRepository(AccountRequest) private accountRequestRepo: Repository<AccountRequest>,
       private jwtService: JwtService,
       private otpService: OtpService,
     ) {}
@@ -75,6 +76,9 @@ import { CreateAccountRequestDto } from './dto/create-account-request.dto';
       const user = await this.userRepo.findOne({ where: { userId: dto.userId } });
       if (!user) throw new UnauthorizedException('Invalid credentials');
       if (user.isAccountLocked) throw new UnauthorizedException('Account is locked');
+      if (user.status !== 'APPROVED') {
+        throw new UnauthorizedException('Your account is not yet approved');
+      }      
   
       const isPasswordValid = await bcrypt.compare(dto.password, user.password);
       if (!isPasswordValid) {

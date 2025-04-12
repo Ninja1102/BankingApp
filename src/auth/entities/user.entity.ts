@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Profile } from 'src/dashboard/entities/profile.entity';
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, OneToOne } from 'typeorm';
 
 @Entity()
 export class User {
@@ -32,9 +33,14 @@ export class User {
   @Column({ default: 0 })
   balance: number;
 
-  @Column({ default: 'APPROVED' }) // or 'PENDING' if you prefer stricter flow
+  @Column({ default: 'PENDING' }) // or 'PENDING' if you prefer stricter flow
   status: 'PENDING' | 'APPROVED' | 'REJECTED';  
 
   @Column({ default: 'USER' })
   role: 'USER' | 'ADMIN';
+
+  @OneToOne(() => Profile, profile => profile.user, { cascade: true })
+  @JoinColumn()
+  profile: Profile;
+  
 }
